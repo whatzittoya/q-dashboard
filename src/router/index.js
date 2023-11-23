@@ -1,6 +1,10 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import Style from '@/views/StyleView.vue'
 import Home from '@/views/HomeView.vue'
+import Transaction from '@/views/TransactionView.vue'
+import TransactionMonthly from '@/views/TransactionMonthlyView.vue'
+import SummarySales from '@/views/SummarySalesView.vue'
+import { isAuthenticated } from '@/service/auth'
 
 const routes = [
   {
@@ -20,6 +24,30 @@ const routes = [
     path: '/dashboard',
     name: 'dashboard',
     component: Home
+  },
+  {
+    meta: {
+      title: 'Transaction'
+    },
+    path: '/transaction',
+    name: 'Transaction',
+    component: Transaction
+  },
+  {
+    meta: {
+      title: 'Transaction Monthly'
+    },
+    path: '/transaction-monthly',
+    name: 'TransactionMonnthly',
+    component: TransactionMonthly
+  },
+  {
+    meta: {
+      title: 'Summary Sales Report'
+    },
+    path: '/summary-sales',
+    name: 'SummarySales',
+    component: SummarySales
   },
   {
     meta: {
@@ -76,6 +104,14 @@ const routes = [
     path: '/error',
     name: 'error',
     component: () => import('@/views/ErrorView.vue')
+  },
+  {
+    meta: {
+      title: 'Manage Member'
+    },
+    path: '/member',
+    name: 'member',
+    component: () => import('@/views/ManageMemberView.vue')
   }
 ]
 
@@ -84,6 +120,17 @@ const router = createRouter({
   routes,
   scrollBehavior(to, from, savedPosition) {
     return savedPosition || { top: 0 }
+  }
+})
+router.beforeEach((to, from, next) => {
+  const isAuth = isAuthenticated()
+  console.log(to.name, isAuth)
+  if (to.name !== 'login' && !isAuth) {
+    next({ name: 'login' }) // Redirect to login if not authenticated
+  } else if (to.name == 'login' && isAuth) {
+    next({ name: 'dashboard' })
+  } else {
+    next() // Continue to the next route
   }
 })
 

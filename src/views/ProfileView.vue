@@ -1,5 +1,5 @@
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useMainStore } from '@/stores/main'
 import { mdiAccount, mdiMail, mdiAsterisk, mdiFormTextboxPassword, mdiGithub } from '@mdi/js'
 import SectionMain from '@/components/SectionMain.vue'
@@ -7,19 +7,14 @@ import CardBox from '@/components/CardBox.vue'
 import BaseDivider from '@/components/BaseDivider.vue'
 import FormField from '@/components/FormField.vue'
 import FormControl from '@/components/FormControl.vue'
-import FormFilePicker from '@/components/FormFilePicker.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
 import UserCard from '@/components/UserCard.vue'
 import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
-import SectionTitleLineWithButton from '@/components/SectionTitleLineWithButton.vue'
+import { resetPassword } from '@/service/auth'
+import NotificationBar from '@/components/NotificationBar.vue'
 
-const mainStore = useMainStore()
-
-const profileForm = reactive({
-  name: mainStore.userName,
-  email: mainStore.userEmail
-})
+const notificationBar = ref({ show: false, color: 'success', text: '' })
 
 const passwordForm = reactive({
   password_current: '',
@@ -27,67 +22,45 @@ const passwordForm = reactive({
   password_confirmation: ''
 })
 
-const submitProfile = () => {
-  mainStore.setUser(profileForm)
-}
-
-const submitPass = () => {
-  //
+const submitPass = async () => {
+  if (passwordForm.password !== passwordForm.password_confirmation) {
+    notificationBar.value.color = 'danger'
+    notificationBar.value.text = 'New and confirm password are not matched'
+    notificationBar.value.show = true
+  } else {
+    const resetAction = await resetPassword(
+      passwordForm.password_current,
+      passwordForm.password_confirmation
+    )
+    if (resetAction.success) {
+      notificationBar.value.color = 'success'
+      notificationBar.value.text = 'Password reset successfully'
+      notificationBar.value.show = true
+    } else {
+      notificationBar.value.color = 'danger'
+      notificationBar.value.text = resetAction.message
+      notificationBar.value.show = true
+    }
+    console.log(resetAction)
+  }
+  passwordForm.password_current = ''
+  passwordForm.password = ''
+  passwordForm.password_confirmation = ''
 }
 </script>
 
 <template>
   <LayoutAuthenticated>
     <SectionMain>
-      <SectionTitleLineWithButton :icon="mdiAccount" title="Profile" main>
-        <BaseButton
-          href="https://github.com/justboil/admin-one-vue-tailwind"
-          target="_blank"
-          :icon="mdiGithub"
-          label="Star on GitHub"
-          color="contrast"
-          rounded-full
-          small
-        />
-      </SectionTitleLineWithButton>
-
       <UserCard class="mb-6" />
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <CardBox is-form @submit.prevent="submitProfile">
-          <FormField label="Avatar" help="Max 500kb">
-            <FormFilePicker label="Upload" />
-          </FormField>
-
-          <FormField label="Name" help="Required. Your name">
-            <FormControl
-              v-model="profileForm.name"
-              :icon="mdiAccount"
-              name="username"
-              required
-              autocomplete="username"
-            />
-          </FormField>
-          <FormField label="E-mail" help="Required. Your e-mail">
-            <FormControl
-              v-model="profileForm.email"
-              :icon="mdiMail"
-              type="email"
-              name="email"
-              required
-              autocomplete="email"
-            />
-          </FormField>
-
-          <template #footer>
-            <BaseButtons>
-              <BaseButton color="info" type="submit" label="Submit" />
-              <BaseButton color="info" label="Options" outline />
-            </BaseButtons>
-          </template>
-        </CardBox>
+  
 
         <CardBox is-form @submit.prevent="submitPass">
+          <NotificationBar v-if="notificationBar.show" :color="notificationBar.color" :icon="mdiContrastCircle" :outline="notificationsOutline">
+        {{notificationBar.text}}
+        </NotificationBar>
           <FormField label="Current password" help="Required. Your current password">
             <FormControl
               v-model="passwordForm.password_current"

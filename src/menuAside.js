@@ -10,14 +10,36 @@ import {
   mdiTelevisionGuide,
   mdiResponsive,
   mdiPalette,
-  mdiReact
+  mdiReact,
+  mdiAccount,
+  mdiCurrencyUsd
 } from '@mdi/js'
 
 export default [
+  // {
+  //   to: '/dashboard',
+  //   icon: mdiMonitor,
+  //   label: 'Dashboard'
+  // },
   {
-    to: '/dashboard',
-    icon: mdiMonitor,
-    label: 'Dashboard'
+    to: '/transaction',
+    icon: mdiCurrencyUsd,
+    label: 'Transaction'
+  },
+  {
+    to: '/transaction-monthly',
+    icon: mdiCurrencyUsd,
+    label: 'Transaction Monthly'
+  },
+  {
+    to: '/summary-sales',
+    icon: mdiTable,
+    label: 'Summary Sales Report'
+  },
+  {
+    to: '/member',
+    icon: mdiAccount,
+    label: 'Manage Member'
   },
   {
     to: '/tables',

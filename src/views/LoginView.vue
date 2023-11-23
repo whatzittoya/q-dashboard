@@ -1,5 +1,5 @@
 <script setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { mdiAccount, mdiAsterisk } from '@mdi/js'
 import SectionFullScreen from '@/components/SectionFullScreen.vue'
@@ -10,24 +10,36 @@ import FormControl from '@/components/FormControl.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import BaseButtons from '@/components/BaseButtons.vue'
 import LayoutGuest from '@/layouts/LayoutGuest.vue'
+import { login } from '@/service/auth'
+import NotificationBar from '@/components/NotificationBar.vue'
 
 const form = reactive({
-  login: 'john.doe',
-  pass: 'highly-secure-password-fYjUw-',
+  login: '',
+  pass: '',
   remember: true
 })
-
+const failedLogin = ref(false)
 const router = useRouter()
 
-const submit = () => {
-  router.push('/dashboard')
+const submit = async () => {
+  const postLogin = await login(form.login, form.pass)
+  if (postLogin.success) {
+    failedLogin.value = false
+    router.push('/dashboard')
+  } else {
+    failedLogin.value = true
+  }
 }
 </script>
 
 <template>
   <LayoutGuest>
+    
     <SectionFullScreen v-slot="{ cardClass }" bg="purplePink">
       <CardBox :class="cardClass" is-form @submit.prevent="submit">
+      <NotificationBar v-if="failedLogin" color="danger" :icon="mdiContrastCircle" :outline="notificationsOutline">
+        <b>Failed Login</b> Incorrect Username/Password
+      </NotificationBar>
         <FormField label="Login" help="Please enter your login">
           <FormControl
             v-model="form.login"
