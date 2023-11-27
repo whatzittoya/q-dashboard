@@ -12,7 +12,8 @@ import {
   mdiPalette,
   mdiReact,
   mdiAccount,
-  mdiCurrencyUsd
+  mdiCurrencyUsd,
+  mdiChartBar
 } from '@mdi/js'
 
 export default [
@@ -35,6 +36,16 @@ export default [
     to: '/summary-sales',
     icon: mdiTable,
     label: 'Summary Sales Report'
+  },
+  {
+    to: '/sales-type',
+    icon: mdiTable,
+    label: 'Sales Type Report'
+  },
+  {
+    to: '/item-sales',
+    icon: mdiChartBar,
+    label: 'Item Sales Report'
   },
   {
     to: '/member',

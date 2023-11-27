@@ -28,18 +28,28 @@ export const useMainStore = defineStore('main', () => {
     payment_summary: { data: [], isLoading: false },
     discount_summary: { data: [], isLoading: false },
     no_sales: { data: [], isLoading: false },
-    item_sales: { data: [], isLoading: false }
+    item_sales: { data: [], isLoading: false },
+    sales_type: { data: [], isLoading: false }
   })
 
   function setUser() {
-    userName.value = localStorage.getItem('email')
-    userEmail.value = localStorage.getItem('email')
     apiToken.value = localStorage.getItem('token')
+    axios({
+      method: 'GET',
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      url: `${import.meta.env.VITE_API_URL}/user`
+    })
+      .then((result) => {
+        const data = result?.data
+        userName.value = data.name
+        userEmail.value = data.email
+      })
+      .catch((error) => {
+        alert(error.message)
+      })
   }
 
   function fetchSampleClients() {
-    console.log(import.meta.env.VITE_API_URL)
-
     axios
       .get(`data-sources/clients.json?v=3`)
       .then((result) => {
@@ -61,6 +71,8 @@ export const useMainStore = defineStore('main', () => {
       })
   }
 
+  function fetchCurrentUser() {}
+
   function fetchQuinosTransaction(date1, date2, store) {
     axiosRequest(`transaction/daily/${date1}/${date2}/${store}`, 'transaction_daily')
   }
@@ -74,6 +86,10 @@ export const useMainStore = defineStore('main', () => {
 
   function fetchMember() {
     axiosRequest(`get-member`, 'member')
+  }
+
+  function clearApiData(name) {
+    apiData.value[name] = { data: [], isLoading: false }
   }
 
   function fetchSummarySales(date1, date2, store) {
@@ -92,6 +108,9 @@ export const useMainStore = defineStore('main', () => {
 
   function fetchItemSales(date1, date2, store) {
     axiosRequest(`report/item-sales/${date1}/${date2}/${store}`, 'item_sales')
+  }
+  function fetchSalesType(date1, date2, store) {
+    axiosRequest(`report/sales-type/${date1}/${date2}/${store}`, 'sales_type')
   }
   function axiosRequest(url, state) {
     apiData.value[state].data = []
@@ -128,6 +147,8 @@ export const useMainStore = defineStore('main', () => {
     fetchPaymentSummary,
     fetchDiscountSummary,
     fetchItemSales,
-    fetchNoSales
+    fetchNoSales,
+    fetchSalesType,
+    clearApiData
   }
 })

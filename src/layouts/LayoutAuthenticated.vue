@@ -76,7 +76,9 @@ const menuClick = async (event, item) => {
         @menu-click="menuClick"
         @aside-lg-close-click="isAsideLgActive = false"
       />
+      <div class="p-2">
       <slot />
+      </div>
       <FooterBar>
         Get more with
         <a href="https://tailwind-vue.justboil.me/" target="_blank" class="text-blue-600"

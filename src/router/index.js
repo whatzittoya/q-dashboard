@@ -4,6 +4,8 @@ import Home from '@/views/HomeView.vue'
 import Transaction from '@/views/TransactionView.vue'
 import TransactionMonthly from '@/views/TransactionMonthlyView.vue'
 import SummarySales from '@/views/SummarySalesView.vue'
+import ItemSales from '@/views/ItemSalesView.Vue'
+import SalesType from '@/views/SalesTypeView.Vue'
 import { isAuthenticated } from '@/service/auth'
 
 const routes = [
@@ -48,6 +50,22 @@ const routes = [
     path: '/summary-sales',
     name: 'SummarySales',
     component: SummarySales
+  },
+  {
+    meta: {
+      title: 'Item Sales Report'
+    },
+    path: '/item-sales',
+    name: 'ItemSales',
+    component: ItemSales
+  },
+  {
+    meta: {
+      title: 'Sales Type Report'
+    },
+    path: '/sales-type',
+    name: 'SalesType',
+    component: SalesType
   },
   {
     meta: {

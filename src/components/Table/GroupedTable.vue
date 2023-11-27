@@ -7,6 +7,7 @@ import BaseButton from '@/components/BaseButton.vue'
 import TableLoading from '@/components/quinos/skeleton/TableLoading.vue'
 import CardBox from '@/components/CardBox.vue'
 import { mdiEye, mdiTrashCan } from '@mdi/js'
+import { autoFormat } from '@/service/formatNumber'
 
 const props = defineProps({
   items: { type: Object, default: () => ({}) },
@@ -72,9 +73,13 @@ const pagesList = computed(() => {
       </tr>
     </thead>
     <tbody>
-      <tr v-for="data in itemsPaginated" :key="data.id">
+    <template v-for="g in items.data" :key="g.title">
+    <tr v-if="g.title">
+        <td colspan="3"><b>{{g.title}}</b></td>
+    </tr>
+      <tr v-for="data in g.items" :key="data.id">
         <td v-for="d in props.dataAttr" :key="d.obj" :data-label="d.obj">
-          {{ data[d.obj]}}
+          {{ autoFormat(data[d.obj],d.format)}}
         </td>
       <td v-show="props.hasEdit" class="before:hidden lg:w-1 whitespace-nowrap">
           <BaseButtons type="justify-start lg:justify-end" no-wrap>
@@ -88,25 +93,17 @@ const pagesList = computed(() => {
           </BaseButtons>
         </td>
       </tr>
+       <tr>
+        <td v-for="d in props.dataAttr" :key="d.obj" :data-label="d.obj">
+          <b>{{ autoFormat(g[d.obj],d.format)}}</b>
+        </td>
+      </tr>
+    </template>
+     
       <TableLoading v-if="items.isLoading" :num-col="props.dataAttr.length" :row="props.rowLoading"></TableLoading>
 
     </tbody>
   </table>
-  <div v-show="props.hasPaging" class="p-3 lg:px-6 border-t border-gray-100 dark:border-slate-800">
-    <BaseLevel>
-      <BaseButtons>
-        <BaseButton
-          v-for="page in pagesList"
-          :key="page"
-          :active="page === currentPage"
-          :label="page + 1"
-          :color="page === currentPage ? 'lightDark' : 'whiteDark'"
-          small
-          @click="currentPage = page"
-        />
-      </BaseButtons>
-      <small>Page {{ currentPageHuman }} of {{ numPages }}</small>
-    </BaseLevel>
-  </div>
+
   </CardBox> 
 </template>
