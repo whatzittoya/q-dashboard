@@ -25,9 +25,9 @@ const calculateTotalByDepartmment = (data) => {
     }
 
     // Update totals for the current departmentCode
-    departmentTotals.get(departmentCode).totalQuantity += transactionLine.quantity
-    departmentTotals.get(departmentCode).totalRevenue += transactionLine.revenue
-    total_all += transactionLine.revenue
+    departmentTotals.get(departmentCode).totalQuantity += parseInt(transactionLine.quantity)
+    departmentTotals.get(departmentCode).totalRevenue += parseFloat(transactionLine.revenue)
+    total_all += parseFloat(transactionLine.revenue)
   })
 
   // Convert the map to an array of objects

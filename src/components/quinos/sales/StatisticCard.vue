@@ -27,5 +27,5 @@ const dataList = [
 </script>
 
 <template>
-      <CardReport :items="itemSummary" :data-list="dataList" title="Revenue" :transformed="true"></CardReport>
+      <CardReport :items="itemSummary" :data-list="dataList" title="Statistic" :transformed="true"></CardReport>
 </template>

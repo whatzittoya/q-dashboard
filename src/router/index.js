@@ -4,29 +4,12 @@ import Home from '@/views/HomeView.vue'
 import Transaction from '@/views/TransactionView.vue'
 import TransactionMonthly from '@/views/TransactionMonthlyView.vue'
 import SummarySales from '@/views/SummarySalesView.vue'
-import ItemSales from '@/views/ItemSalesView.Vue'
-import SalesType from '@/views/SalesTypeView.Vue'
+import ItemSales from '@/views/ItemSalesView.vue'
+import SalesType from '@/views/SalesTypeView.vue'
 import { isAuthenticated } from '@/service/auth'
+import { useMainStore } from '@/stores/main'
 
 const routes = [
-  {
-    meta: {
-      title: 'Select style'
-    },
-    path: '/',
-    name: 'style',
-    component: Style
-  },
-  {
-    // Document title tag
-    // We combine it with defaultDocumentTitle set in `src/main.js` on router.afterEach hook
-    meta: {
-      title: 'Dashboard'
-    },
-    path: '/dashboard',
-    name: 'dashboard',
-    component: Home
-  },
   {
     meta: {
       title: 'Transaction'
@@ -69,22 +52,6 @@ const routes = [
   },
   {
     meta: {
-      title: 'Tables'
-    },
-    path: '/tables',
-    name: 'tables',
-    component: () => import('@/views/TablesView.vue')
-  },
-  {
-    meta: {
-      title: 'Forms'
-    },
-    path: '/forms',
-    name: 'forms',
-    component: () => import('@/views/FormsView.vue')
-  },
-  {
-    meta: {
       title: 'Profile'
     },
     path: '/profile',
@@ -93,35 +60,11 @@ const routes = [
   },
   {
     meta: {
-      title: 'Ui'
-    },
-    path: '/ui',
-    name: 'ui',
-    component: () => import('@/views/UiView.vue')
-  },
-  {
-    meta: {
-      title: 'Responsive layout'
-    },
-    path: '/responsive',
-    name: 'responsive',
-    component: () => import('@/views/ResponsiveView.vue')
-  },
-  {
-    meta: {
       title: 'Login'
     },
     path: '/login',
     name: 'login',
     component: () => import('@/views/LoginView.vue')
-  },
-  {
-    meta: {
-      title: 'Error'
-    },
-    path: '/error',
-    name: 'error',
-    component: () => import('@/views/ErrorView.vue')
   },
   {
     meta: {
@@ -141,12 +84,14 @@ const router = createRouter({
   }
 })
 router.beforeEach((to, from, next) => {
+  const mainStore = useMainStore()
   const isAuth = isAuthenticated()
-  console.log(to.name, isAuth)
   if (to.name !== 'login' && !isAuth) {
     next({ name: 'login' }) // Redirect to login if not authenticated
   } else if (to.name == 'login' && isAuth) {
-    next({ name: 'dashboard' })
+    next({ name: 'SummarySales' })
+  } else if (to.name == 'member' && mainStore.user.role != 'admin') {
+    next({ name: 'SummarySales' })
   } else {
     next() // Continue to the next route
   }

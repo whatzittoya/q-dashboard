@@ -1,5 +1,5 @@
 <script setup>
-import { mdiChartBar } from '@mdi/js'
+import { mdiTableArrowUp } from '@mdi/js'
 import { ref, watch, computed, onMounted } from 'vue'
 import CardBox from '@/components/CardBox.vue'
 import SearchBox from '@/components/quinos/form/SearchBox.vue'
@@ -8,7 +8,6 @@ import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
 import SectionMain from '@/components/SectionMain.vue'
 import SectionTitleLineWithButton from '@/components/SectionTitleLineWithButton.vue'
 import { useMainStore } from '@/stores/main'
-import BarChart from '@/components/quinos/itemsales/BarChart.vue'
 import SalesTypeTable from '@/components/quinos/salestype/SalesTypeTable.vue'
 
 const mainStore = useMainStore()
@@ -24,7 +23,7 @@ const ItemSales = computed(() => {
       return { isLoading: false, data: [] }
     }
   }
-  return mainStore.apiData.item_sales
+  return mainStore.apiData.sales_type
 })
 onMounted(() => {
   mainStore.clearApiData('sales_type')
@@ -32,14 +31,14 @@ onMounted(() => {
 </script>
 
 <template>
-     <LayoutAuthenticated>
+  <LayoutAuthenticated>
     <SectionMain>
-      <SectionTitleLineWithButton :icon="mdiChartBar" title="Sales Type Report" main>
- </SectionTitleLineWithButton>
- <CardBox>
-    <SearchBox has-date  @search-data="getReport"></SearchBox>
-    <SalesTypeTable :items="ItemSales"></SalesTypeTable>
-</CardBox>
- </SectionMain>
- </LayoutAuthenticated>
+      <SectionTitleLineWithButton :icon="mdiTableArrowUp" title="Sales Type Report" main>
+      </SectionTitleLineWithButton>
+      <CardBox>
+        <SearchBox has-date @search-data="getReport"></SearchBox>
+        <SalesTypeTable :items="ItemSales"></SalesTypeTable>
+      </CardBox>
+    </SectionMain>
+  </LayoutAuthenticated>
 </template>

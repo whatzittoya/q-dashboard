@@ -9,16 +9,16 @@ import './css/main.css'
 
 // Init Pinia
 const pinia = createPinia()
+const mainStore = useMainStore(pinia)
 
 // Create Vue app
-createApp(App).use(router).use([pinia, VueTailwindDatepicker]).mount('#app')
 // Init main store
-const mainStore = useMainStore(pinia)
 
 // Fetch sample data
 mainStore.fetchSampleClients()
 mainStore.fetchSampleHistory()
 mainStore.setUser()
+createApp(App).use(router).use([pinia, VueTailwindDatepicker]).mount('#app')
 
 // Dark mode
 // Uncomment, if you'd like to restore persisted darkMode setting, or use `prefers-color-scheme: dark`. Make sure to uncomment localStorage block in src/stores/darkMode.js
@@ -34,7 +34,7 @@ mainStore.setUser()
 // }
 
 // Default title tag
-const defaultDocumentTitle = 'Admin One Vue 3 Tailwind'
+const defaultDocumentTitle = 'Quinoscloud Report'
 
 // Set document title from route meta
 router.afterEach((to) => {

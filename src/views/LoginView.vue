@@ -25,7 +25,7 @@ const submit = async () => {
   const postLogin = await login(form.login, form.pass)
   if (postLogin.success) {
     failedLogin.value = false
-    router.push('/dashboard')
+    router.push('/summary-sales')
   } else {
     failedLogin.value = true
   }

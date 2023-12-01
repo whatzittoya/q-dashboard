@@ -6,6 +6,7 @@ import BaseButtons from '@/components/BaseButtons.vue'
 import BaseButton from '@/components/BaseButton.vue'
 import TableLoading from '@/components/quinos/skeleton/TableLoading.vue'
 import CardBox from '@/components/CardBox.vue'
+import { autoFormat } from '@/service/formatNumber'
 
 const props = defineProps({
   items: { type: Object, default: () => ({}) },
@@ -46,39 +47,37 @@ const pagesList = computed(() => {
 })
 </script>
 <template>
-    <CardBox class="mb-6" has-table>
-  <table>
-    <thead>
-      <tr>
-        <th v-for="d in props.dataAttr" :key="d.label">{{ d.label }}</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="data in itemsPaginated" :key="data.Transaction.id">
-        <td v-for="d in props.dataAttr" :key="d.obj" :data-label="d.obj">
-          {{ data.Transaction[d.obj]}}
-        </td>
-      
-      </tr>
-      <TableLoading v-if="items.isLoading" :num-col="props.dataAttr.length"></TableLoading>
-
-    </tbody>
-  </table>
-  <div class="p-3 lg:px-6 border-t border-gray-100 dark:border-slate-800">
-    <BaseLevel>
-      <BaseButtons>
-        <BaseButton
-          v-for="page in pagesList"
-          :key="page"
-          :active="page === currentPage"
-          :label="page + 1"
-          :color="page === currentPage ? 'lightDark' : 'whiteDark'"
-          small
-          @click="currentPage = page"
-        />
-      </BaseButtons>
-      <small>Page {{ currentPageHuman }} of {{ numPages }}</small>
-    </BaseLevel>
-  </div>
-  </CardBox> 
+  <CardBox class="mb-6" has-table>
+    <table>
+      <thead>
+        <tr>
+          <th v-for="d in props.dataAttr" :key="d.label">{{ d.label }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="data in itemsPaginated" :key="data.Transaction.id">
+          <td v-for="d in props.dataAttr" :key="d.obj" :data-label="d.obj">
+            {{ autoFormat(data.Transaction[d.obj], d.format) }}
+          </td>
+        </tr>
+        <TableLoading v-if="items.isLoading" :num-col="props.dataAttr.length"></TableLoading>
+      </tbody>
+    </table>
+    <div class="p-3 lg:px-6 border-t border-gray-100 dark:border-slate-800">
+      <BaseLevel>
+        <BaseButtons>
+          <BaseButton
+            v-for="page in pagesList"
+            :key="page"
+            :active="page === currentPage"
+            :label="page + 1"
+            :color="page === currentPage ? 'lightDark' : 'whiteDark'"
+            small
+            @click="currentPage = page"
+          />
+        </BaseButtons>
+        <small>Page {{ currentPageHuman }} of {{ numPages }}</small>
+      </BaseLevel>
+    </div>
+  </CardBox>
 </template>

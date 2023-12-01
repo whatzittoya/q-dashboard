@@ -4,6 +4,7 @@ import axios from 'axios'
 
 export const useMainStore = defineStore('main', () => {
   const userName = ref()
+  const user = ref({ name: '', email: '', role: '' })
   const userEmail = ref()
   const apiToken = ref()
 
@@ -41,11 +42,13 @@ export const useMainStore = defineStore('main', () => {
     })
       .then((result) => {
         const data = result?.data
-        userName.value = data.name
-        userEmail.value = data.email
+        user.value.name = data.name
+        user.value.email = data.email
+        user.value.role = data.role
       })
       .catch((error) => {
-        alert(error.message)
+        localStorage.removeItem('token')
+        localStorage.removeItem('email')
       })
   }
 
@@ -56,7 +59,7 @@ export const useMainStore = defineStore('main', () => {
         clients.value = result?.data?.data
       })
       .catch((error) => {
-        alert(error.message)
+        // alert(error.message)
       })
   }
 
@@ -67,11 +70,9 @@ export const useMainStore = defineStore('main', () => {
         history.value = result?.data
       })
       .catch((error) => {
-        alert(error.message)
+        // alert(error.message)
       })
   }
-
-  function fetchCurrentUser() {}
 
   function fetchQuinosTransaction(date1, date2, store) {
     axiosRequest(`transaction/daily/${date1}/${date2}/${store}`, 'transaction_daily')
@@ -125,7 +126,7 @@ export const useMainStore = defineStore('main', () => {
         apiData.value[state].isLoading = false
       })
       .catch((error) => {
-        alert(error.message)
+        // alert(error.message)
       })
   }
   return {
@@ -135,6 +136,7 @@ export const useMainStore = defineStore('main', () => {
     isFieldFocusRegistered,
     clients,
     history,
+    user,
     setUser,
     fetchSampleClients,
     fetchSampleHistory,

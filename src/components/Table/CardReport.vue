@@ -50,17 +50,19 @@ const listItems = computed(() => {
 </script>
 
 <template>
-    <div class="w-full sm:w-1/2 md:w-1/2 lg:w-1/2 xl:w-1/2 2xl:w-1/3 p-2">
-    <CardBox >
-        <NotificationBarInCard
-        color="info"
-        :is-placed-with-header="true"
-    >
-        <h1>{{title}}</h1>
-    </NotificationBarInCard>
-    <GenericTable :items="listItems" :data-attr="column" :has-edit="false" :has-paging="false" :has-header="false" :row-loading="5"></GenericTable>
-
-
+  <div class="w-full p-2">
+    <CardBox>
+      <NotificationBarInCard color="info" :is-placed-with-header="true">
+        <h1>{{ title }}</h1>
+      </NotificationBarInCard>
+      <GenericTable
+        :items="listItems"
+        :data-attr="column"
+        :has-edit="false"
+        :has-paging="false"
+        :has-header="false"
+        :row-loading="5"
+      ></GenericTable>
     </CardBox>
-    </div>
+  </div>
 </template>

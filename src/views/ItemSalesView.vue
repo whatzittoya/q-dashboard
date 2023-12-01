@@ -39,6 +39,7 @@ onMounted(() => {
  </SectionTitleLineWithButton>
  <CardBox>
     <SearchBox has-date  @search-data="getReport"></SearchBox>
+
     <BarChart :items="ItemSales"> </BarChart>
     <ItemSalesTable :items="ItemSales"></ItemSalesTable>
 </CardBox>

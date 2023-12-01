@@ -7,6 +7,7 @@ import BaseButton from '@/components/BaseButton.vue'
 import TableLoading from '@/components/quinos/skeleton/TableLoading.vue'
 import CardBox from '@/components/CardBox.vue'
 import { mdiEye, mdiTrashCan } from '@mdi/js'
+import { autoFormat } from '@/service/formatNumber'
 
 const props = defineProps({
   items: { type: Object, default: () => ({}) },
@@ -64,7 +65,6 @@ const pagesList = computed(() => {
 <template>
 
     <CardBox class="mb-6" has-table>
-
   <table>
     <thead>
       <tr>
@@ -74,7 +74,7 @@ const pagesList = computed(() => {
     <tbody>
       <tr v-for="data in itemsPaginated" :key="data.id">
         <td v-for="d in props.dataAttr" :key="d.obj" :data-label="d.obj">
-          {{ data[d.obj]}}
+          {{ autoFormat(data[d.obj],d.format)}}
         </td>
       <td v-show="props.hasEdit" class="before:hidden lg:w-1 whitespace-nowrap">
           <BaseButtons type="justify-start lg:justify-end" no-wrap>

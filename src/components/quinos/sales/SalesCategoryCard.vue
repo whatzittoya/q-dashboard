@@ -27,9 +27,9 @@ const calculateTotalByCategory = (data) => {
     }
 
     // Update totals for the current categoryCode
-    categoryTotals.get(categoryCode).totalQuantity += transactionLine.quantity
-    categoryTotals.get(categoryCode).totalRevenue += transactionLine.revenue
-    total_all += transactionLine.revenue
+    categoryTotals.get(categoryCode).totalQuantity += parseInt(transactionLine.quantity)
+    categoryTotals.get(categoryCode).totalRevenue += parseFloat(transactionLine.revenue)
+    total_all += parseFloat(transactionLine.revenue)
   })
 
   // Convert the map to an array of objects

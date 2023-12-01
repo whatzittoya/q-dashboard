@@ -44,43 +44,53 @@ const pagesList = computed(() => {
 const data_attr = [
   {
     label: 'Date',
-    obj: 'date'
+    obj: 'date',
+    format: 'text'
   },
   {
     label: 'Store',
-    obj: 'brand'
+    obj: 'brand',
+    format: 'text'
   },
   {
     label: 'Type',
-    obj: 'sales_type'
+    obj: 'sales_type',
+    format: 'text'
   },
   {
     label: 'Subtotal',
-    obj: 'subtotal'
+    obj: 'subtotal',
+    format: 'currency'
   },
   {
     label: 'Discount',
-    obj: 'discount'
+    obj: 'discount',
+    format: 'currency'
   },
   {
     label: 'Net Sales',
-    obj: 'netsales'
+    obj: 'netsales',
+    format: 'currency'
   },
   {
     label: 'Serv Chg"',
-    obj: 'service_charge'
+    obj: 'service_charge',
+    format: 'currency'
   },
   {
     label: 'Tax',
-    obj: 'tax'
+    obj: 'tax',
+    format: 'text'
   },
   {
     label: 'Rounding',
-    obj: 'rounding'
+    obj: 'rounding',
+    format: 'currency'
   },
   {
     label: 'Total',
-    obj: 'total'
+    obj: 'total',
+    format: 'currency'
   }
 ]
 </script>

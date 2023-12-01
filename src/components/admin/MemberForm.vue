@@ -40,53 +40,58 @@ const selectOptions = computed(() => {
 })
 
 const confirmDelete = async () => {
-  try {
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_URL}/delete-member/${memberForm.value.id}`
-    )
-  } catch {
-    return
-  }
-  isDangerOpen.value = false
-  const usemainstore = useMainStore()
-  usemainstore.fetchMember()
+  axios({
+    method: 'POST',
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    url: `${import.meta.env.VITE_API_URL}/delete-member/${memberForm.value.id}`
+  })
+    .then((response) => {
+      isDangerOpen.value = false
+      const usemainstore = useMainStore()
+      usemainstore.fetchMember()
+    })
+    .catch((error) => {})
 }
 
 const registerMember = async () => {
-  try {
-    let url = ''
-    let param = {}
-    if (memberForm.value.id) {
-      url = `${import.meta.env.VITE_API_URL}/update-member`
-      param = {
-        id: memberForm.value.id,
-        name: memberForm.value.name,
-        email: memberForm.value.email,
-        password: memberForm.value.password,
-        location: memberForm.value.location
-      }
-    } else {
-      url = `${import.meta.env.VITE_API_URL}/add-member`
-      param = {
-        name: memberForm.value.name,
-        email: memberForm.value.email,
-        password: memberForm.value.password,
-        location: memberForm.value.location
-      }
+  let url = ''
+  let param = {}
+  if (memberForm.value.id) {
+    url = `${import.meta.env.VITE_API_URL}/update-member`
+    param = {
+      id: memberForm.value.id,
+      name: memberForm.value.name,
+      email: memberForm.value.email,
+      password: memberForm.value.password,
+      location: memberForm.value.location
     }
-    const response = await axios.post(url, param)
-    notificationBar.value.show = true
-    notificationBar.value.text = response.data.message
-    notificationBar.value.color = 'success'
-    emit('update-member-form')
-    const usemainstore = useMainStore()
-    usemainstore.fetchMember()
-    // You can redirect or perform other actions here
-  } catch (error) {
-    notificationBar.value.show = true
-    notificationBar.value.text = 'Member registration failed'
-    notificationBar.value.color = 'danger'
+  } else {
+    url = `${import.meta.env.VITE_API_URL}/add-member`
+    param = {
+      name: memberForm.value.name,
+      email: memberForm.value.email,
+      password: memberForm.value.password,
+      location: memberForm.value.location
+    }
   }
+  axios({
+    method: 'POST',
+    headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    url: url,
+    params: param
+  })
+    .then((response) => {
+      notificationBar.value.show = true
+      notificationBar.value.text = response.data.message
+      notificationBar.value.color = 'success'
+      const usemainstore = useMainStore()
+      usemainstore.fetchMember()
+    })
+    .catch((error) => {
+      notificationBar.value.show = true
+      notificationBar.value.text = 'Member registration failed'
+      notificationBar.value.color = 'danger'
+    })
 }
 </script>
 <template>

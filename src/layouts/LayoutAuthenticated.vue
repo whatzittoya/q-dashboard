@@ -13,7 +13,7 @@ import AsideMenu from '@/components/AsideMenu.vue'
 import FooterBar from '@/components/FooterBar.vue'
 import { logout } from '@/service/auth'
 
-const layoutAsidePadding = 'xl:pl-60'
+const layoutAsidePadding = 'xl:pl-80'
 
 const darkModeStore = useDarkModeStore()
 
@@ -65,9 +65,6 @@ const menuClick = async (event, item) => {
         <NavBarItemPlain display="hidden lg:flex xl:hidden" @click.prevent="isAsideLgActive = true">
           <BaseIcon :path="mdiMenu" size="24" />
         </NavBarItemPlain>
-        <NavBarItemPlain use-margin>
-          <FormControl placeholder="Search (ctrl+k)" ctrl-k-focus transparent borderless />
-        </NavBarItemPlain>
       </NavBar>
       <AsideMenu
         :is-aside-mobile-expanded="isAsideMobileExpanded"
@@ -77,14 +74,8 @@ const menuClick = async (event, item) => {
         @aside-lg-close-click="isAsideLgActive = false"
       />
       <div class="p-2">
-      <slot />
+        <slot />
       </div>
-      <FooterBar>
-        Get more with
-        <a href="https://tailwind-vue.justboil.me/" target="_blank" class="text-blue-600"
-          >Premium version</a
-        >
-      </FooterBar>
     </div>
   </div>
 </template>

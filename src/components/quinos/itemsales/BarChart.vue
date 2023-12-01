@@ -68,6 +68,16 @@ onMounted(() => {
     type: 'bar',
     data: chartData.value,
     options: {
+      animation: {
+        duration: 2000,
+        onProgress: function (context) {
+          if (context.initial) {
+            initProgress.value = context.currentStep / context.numSteps
+          } else {
+            progress.value = context.currentStep / context.numSteps
+          }
+        }
+      },
       scales: {
         y: {
           title: {
@@ -104,6 +114,18 @@ watch(chartData, (data) => {
 </script>
 
 <template>
-        <canvas ref="root" />
-    
+
+ <div class="relative">
+        <!-- Loading spinner -->
+        <div v-if="items.isLoading" class="absolute right-1/2 bottom-1/2  transform translate-x-1/2 translate-y-1/2 ">
+            <div class="border-t-transparent border-solid animate-spin  rounded-full border-blue-400 border-4 h-32 w-32"></div>
+        </div>
+          
+        <canvas ref="root"></canvas>
+
+    </div>
+
+
+        <!-- <canvas ref="root" /> -->
 </template>
+ 

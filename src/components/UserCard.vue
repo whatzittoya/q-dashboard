@@ -7,7 +7,7 @@ import CardBox from '@/components/CardBox.vue'
 
 const mainStore = useMainStore()
 
-const userName = computed(() => mainStore.userName)
+const userName = computed(() => mainStore.user.name)
 </script>
 
 <template>
