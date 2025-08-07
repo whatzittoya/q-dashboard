@@ -72,6 +72,7 @@ defineExpose({ itemPayment })
 </script>
 
 <template>
+  
       <CardReport :items="itemPayment" :data-list="dataList" title="Payment Method"></CardReport>
 
 </template>

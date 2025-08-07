@@ -1,50 +1,53 @@
 <script setup>
-import { mdiForwardburger, mdiBackburger, mdiMenu } from '@mdi/js'
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import menuAside from '@/menuAside.js'
-import menuNavBar from '@/menuNavBar.js'
-import { useDarkModeStore } from '@/stores/darkMode.js'
-import BaseIcon from '@/components/BaseIcon.vue'
-import FormControl from '@/components/FormControl.vue'
-import NavBar from '@/components/NavBar.vue'
-import NavBarItemPlain from '@/components/NavBarItemPlain.vue'
-import AsideMenu from '@/components/AsideMenu.vue'
-import FooterBar from '@/components/FooterBar.vue'
-import { logout } from '@/service/auth'
+import { mdiForwardburger, mdiBackburger, mdiMenu } from "@mdi/js";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import menuAside from "@/menuAside.js";
+import menuNavBar from "@/menuNavBar.js";
+import { useDarkModeStore } from "@/stores/darkMode.js";
+import BaseIcon from "@/components/BaseIcon.vue";
+import FormControl from "@/components/FormControl.vue";
+import NavBar from "@/components/NavBar.vue";
+import NavBarItemPlain from "@/components/NavBarItemPlain.vue";
+import AsideMenu from "@/components/AsideMenu.vue";
+import FooterBar from "@/components/FooterBar.vue";
+import { logout } from "@/service/auth";
 
-const layoutAsidePadding = 'xl:pl-80'
+const layoutAsidePadding = "xl:pl-80";
 
-const darkModeStore = useDarkModeStore()
+const darkModeStore = useDarkModeStore();
 
-const router = useRouter()
+const router = useRouter();
 
-const isAsideMobileExpanded = ref(false)
-const isAsideLgActive = ref(false)
+const isAsideMobileExpanded = ref(false);
+const isAsideLgActive = ref(false);
 
 router.beforeEach(() => {
-  isAsideMobileExpanded.value = false
-  isAsideLgActive.value = false
-})
+  isAsideMobileExpanded.value = false;
+  isAsideLgActive.value = false;
+});
 
 const menuClick = async (event, item) => {
   if (item.isToggleLightDark) {
-    darkModeStore.set()
+    darkModeStore.set();
   }
 
   if (item.isLogout) {
-    const logoutAction = await logout()
+    const logoutAction = await logout();
     if (logoutAction.success) {
-      router.push('login')
+      router.push("login").then(() => {
+        console.log("logout success");
+        router.go(0);
+      });
     }
   }
-}
+};
 </script>
 
 <template>
   <div
     :class="{
-      'overflow-hidden lg:overflow-visible': isAsideMobileExpanded
+      'overflow-hidden lg:overflow-visible': isAsideMobileExpanded,
     }"
   >
     <div
@@ -60,9 +63,15 @@ const menuClick = async (event, item) => {
           display="flex lg:hidden"
           @click.prevent="isAsideMobileExpanded = !isAsideMobileExpanded"
         >
-          <BaseIcon :path="isAsideMobileExpanded ? mdiBackburger : mdiForwardburger" size="24" />
+          <BaseIcon
+            :path="isAsideMobileExpanded ? mdiBackburger : mdiForwardburger"
+            size="24"
+          />
         </NavBarItemPlain>
-        <NavBarItemPlain display="hidden lg:flex xl:hidden" @click.prevent="isAsideLgActive = true">
+        <NavBarItemPlain
+          display="hidden lg:flex xl:hidden"
+          @click.prevent="isAsideLgActive = true"
+        >
           <BaseIcon :path="mdiMenu" size="24" />
         </NavBarItemPlain>
       </NavBar>

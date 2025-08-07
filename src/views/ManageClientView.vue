@@ -6,79 +6,81 @@ import SectionMain from "@/components/SectionMain.vue";
 
 import LayoutAuthenticated from "@/layouts/LayoutAuthenticated.vue";
 import BaseButton from "@/components/BaseButton.vue";
-import MemberForm from "@/components/admin/MemberForm.vue";
-import MemberTable from "@/components/admin/MemberTable.vue";
+import ClientForm from "@/components/admin/ClientForm.vue";
+import ClientTable from "@/components/admin/ClientTable.vue";
 import SectionTitleLineWithButton from "@/components/SectionTitleLineWithButton.vue";
 import CardBox from "@/components/CardBox.vue";
 const isModalActive = ref(false);
 const infoData = ref({});
-const MemberFormRef = ref();
+const ClientFormRef = ref();
 const isModalDangerActive = ref(false);
-const emptyMemberForm = () => ({
+const emptyClientForm = () => ({
   id: "",
   name: "",
   email: "",
   password: "",
-  password_confirmation: "",
-  location: "",
-  store: {},
+  description: "",
+  url: "",
+  admin_name: "",
+  admin_email: "",
+  admin_pass: "",
 });
-const memberForm = reactive(emptyMemberForm());
-const updateMemberForm = ($data = emptyMemberForm()) => {
-  // console.log($data.store);
-  const setMemberForm = (data) => ({
+const clientForm = reactive(emptyClientForm());
+const updateClientForm = ($data = emptyClientForm()) => {
+  const setClientForm = (data) => ({
     id: data.id,
     name: data.name,
     email: data.email,
     password: "",
-    password_confirmation: "",
-    location: data.location,
-    store: { label: data.store.label, value: data.store.value },
-    // store: { label: "AL_JAZEERAH", value: "AL_JAZEERAH" },
+    description: data.description,
+    url: data.url,
+    admin_name: data.user?.name,
+    admin_email: data.user?.email,
+    admin_pass: "",
   });
-
-  Object.assign(memberForm, setMemberForm($data));
+  Object.assign(clientForm, setClientForm($data));
 };
 const openInfoModal = ($val, $data) => {
   isModalActive.value = $val;
-  updateMemberForm($data);
+  updateClientForm($data);
 };
 const openDangerModal = ($val, $data) => {
   isModalDangerActive.value = $val;
-  updateMemberForm($data);
+  updateClientForm($data);
 };
 </script>
 
 <template>
   <LayoutAuthenticated>
     <SectionMain>
-      <SectionTitleLineWithButton :icon="mdiAccount" title="Manage Member" main>
+      <SectionTitleLineWithButton :icon="mdiAccount" title="Manage Client" main>
       </SectionTitleLineWithButton>
+
       <CardBox>
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div class="">
             <BaseButton
               type="submit"
               color="info"
-              label="Add Member"
+              label="Add Client"
               :icon="mdiPlusCircle"
               @click="openInfoModal(true)"
             />
           </div>
 
-          <MemberForm
+          <ClientForm
             :modal-info-open="isModalActive"
             :modal-danger-open="isModalDangerActive"
-            :member-form="memberForm"
+            :client-form="clientForm"
             @open-info-modal="openInfoModal"
             @open-danger-modal="openDangerModal"
-            @update-member-form="updateMemberForm"
-          ></MemberForm>
+            @update-client-form="updateClientForm"
+          ></ClientForm>
         </div>
-        <MemberTable
+        <ClientTable
           @open-info-modal="openInfoModal"
           @open-danger-modal="openDangerModal"
-        ></MemberTable>
+        ></ClientTable>
       </CardBox>
     </SectionMain>
   </LayoutAuthenticated>

@@ -1,4 +1,6 @@
+
 export const autoFormat = (number, type) => {
+  // return number
   switch (type) {
     case 'number':
       return formatNumber(number)
@@ -6,11 +8,22 @@ export const autoFormat = (number, type) => {
       return formatCurrency(number)
     case 'percent':
       return formatPercent(number)
+    case 'text':
+
+      return String(number)
     default:
-      return number
+      
+      if(type === undefined) return number
+      else if (type.toString().includes('url')){
+        const url=type.split('-')[1]
+        const new_url=url.replace('{id}',number)
+        return `<a href='${new_url}' clas>${number}</a>`
+    }
+     
   }
 }
 export const formatNumber = (number) => {
+  if(number===undefined) return 0
   return isNumber(number)
     ? roundToTwo(number)
         .toString()
@@ -19,6 +32,7 @@ export const formatNumber = (number) => {
 }
 
 export const formatCurrency = (number) => {
+  if(number===undefined || number==null) return 0
   return isNumber(number)
     ? parseFloat(number)
         .toFixed(2)
@@ -37,6 +51,8 @@ function isNumber(value) {
     return false
   }
 }
+
+
 
 function roundToTwo(num) {
   return +(Math.round(parseFloat(num) + 'e+2') + 'e-2')

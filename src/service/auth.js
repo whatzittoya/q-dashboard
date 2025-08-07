@@ -5,17 +5,18 @@ export async function login(email, password) {
   try {
     const response = await axios.post(`${import.meta.env.VITE_API_URL}/login-back`, {
       email: email,
-      password: password
+      password: password,
     })
 
     const token = response.data.api_key
-
+const role=response.data.role
     // Store the token in local storage
     localStorage.setItem('token', token)
     localStorage.setItem('email', email)
+    localStorage.setItem('role', role)
 
-    await useMainStore().setUser()
-    return { success: true, token: token }
+  
+    return { success: true, token: token,role:role }
   } catch (error) {
     console.error('Login failed', error)
     return { success: false, error: error.message }
@@ -33,7 +34,9 @@ export async function logout() {
 
     localStorage.removeItem('token')
     localStorage.removeItem('email')
+    localStorage.removeItem('role')
     await useMainStore().setUser()
+    useMainStore().resetQuinosData()
 
     return { success: true, message: response.data.message }
   } catch (error) {
@@ -50,6 +53,10 @@ export function isAuthenticated() {
   return !!token && !!email // Returns true if the token is present, false otherwise
 }
 
+export function getRole() {
+  const role = localStorage.getItem('role')
+  return role
+}
 export const resetPassword = async (oldPassword, newPassword) => {
   const token = localStorage.getItem('token')
 

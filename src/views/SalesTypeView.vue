@@ -1,33 +1,33 @@
 <script setup>
-import { mdiTableArrowUp } from '@mdi/js'
-import { ref, watch, computed, onMounted } from 'vue'
-import CardBox from '@/components/CardBox.vue'
-import SearchBox from '@/components/quinos/form/SearchBox.vue'
+import { mdiTableArrowUp } from "@mdi/js";
+import { ref, watch, computed, onMounted } from "vue";
+import CardBox from "@/components/CardBox.vue";
+import SearchBox from "@/components/quinos/form/SearchBox.vue";
 
-import LayoutAuthenticated from '@/layouts/LayoutAuthenticated.vue'
-import SectionMain from '@/components/SectionMain.vue'
-import SectionTitleLineWithButton from '@/components/SectionTitleLineWithButton.vue'
-import { useMainStore } from '@/stores/main'
-import SalesTypeTable from '@/components/quinos/salestype/SalesTypeTable.vue'
+import LayoutAuthenticated from "@/layouts/LayoutAuthenticated.vue";
+import SectionMain from "@/components/SectionMain.vue";
+import SectionTitleLineWithButton from "@/components/SectionTitleLineWithButton.vue";
+import { useMainStore } from "@/stores/main";
+import SalesTypeTable from "@/components/quinos/salestype/SalesTypeTable.vue";
 
-const mainStore = useMainStore()
+const mainStore = useMainStore();
 
 const getReport = (date1, date2, store) => {
-  mainStore.fetchSalesType(date1, date2, store)
-}
+  mainStore.fetchSalesType(date1, date2, store);
+};
 const ItemSales = computed(() => {
   if (!mainStore.apiData.sales_type.isLoading) {
     try {
-      return { isLoading: false, data: mainStore.apiData.sales_type.data }
+      return { isLoading: false, data: mainStore.apiData.sales_type.data };
     } catch {
-      return { isLoading: false, data: [] }
+      return { isLoading: false, data: [] };
     }
   }
-  return mainStore.apiData.sales_type
-})
+  return mainStore.apiData.sales_type;
+});
 onMounted(() => {
-  mainStore.clearApiData('sales_type')
-})
+  mainStore.clearApiData("sales_type");
+});
 </script>
 
 <template>
@@ -37,6 +37,7 @@ onMounted(() => {
       </SectionTitleLineWithButton>
       <CardBox>
         <SearchBox has-date @search-data="getReport"></SearchBox>
+
         <SalesTypeTable :items="ItemSales"></SalesTypeTable>
       </CardBox>
     </SectionMain>
