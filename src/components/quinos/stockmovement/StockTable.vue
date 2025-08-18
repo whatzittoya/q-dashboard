@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed } from "vue";
-import axios from "axios";
 
 // Dummy data
 const columns = ["name", "code", "category"];
@@ -10,14 +9,11 @@ const props = defineProps({
   selectedDate: { type: String, default: "" },
 });
 
-const emit = defineEmits(["po-updated"]);
-
 const sortKey = ref("name");
 const sortOrders = ref({
   name: 1,
   code: 1,
   category: 1,
-  po: 1,
   total: 1,
 });
 
@@ -29,13 +25,6 @@ const columnFilters = ref({
 });
 
 const activeFilter = ref(""); // Track which filter is currently active
-
-// PO Modal state
-const showPOModal = ref(false);
-const selectedItem = ref(null);
-const modalDate = ref("");
-const poValue = ref("");
-const isUpdatingPO = ref(false);
 
 const toggleFilter = (key) => {
   activeFilter.value = activeFilter.value === key ? "" : key;
@@ -93,51 +82,6 @@ const getDataValue = (item, col) => {
     return item[`${warehouseName}-requested`] || 0;
   }
   return item[col] || 0;
-};
-
-// PO Modal functions
-const openPOModal = (item, date) => {
-  selectedItem.value = item;
-  modalDate.value = date;
-  poValue.value = item.po || "";
-  showPOModal.value = true;
-};
-
-const closePOModal = () => {
-  showPOModal.value = false;
-  selectedItem.value = null;
-  modalDate.value = "";
-  poValue.value = "";
-};
-
-const updatePO = async () => {
-  if (!selectedItem.value || !modalDate.value) return;
-
-  isUpdatingPO.value = true;
-  try {
-    const response = await axios({
-      method: "POST",
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      url: `${import.meta.env.VITE_API_URL}/warehouse/po/add`,
-      data: {
-        item_id: selectedItem.value.item_id,
-        date: modalDate.value,
-        po: poValue.value,
-      },
-    });
-
-    if (response.data.success) {
-      // Update the local item data
-      selectedItem.value.po = poValue.value;
-      emit("po-updated", selectedItem.value);
-      closePOModal();
-    }
-  } catch (error) {
-    console.error("Error updating PO:", error);
-    alert("Failed to update PO. Please try again.");
-  } finally {
-    isUpdatingPO.value = false;
-  }
 };
 </script>
 
@@ -241,15 +185,6 @@ const updatePO = async () => {
               </div>
             </th>
 
-            <!-- PO column -->
-            <th class="px-3 py-2 border-b w-24">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-2">
-                  <span>PO</span>
-                </div>
-              </div>
-            </th>
-
             <!-- Total column -->
             <th class="px-3 py-2 border-b w-24">
               <div
@@ -285,18 +220,6 @@ const updatePO = async () => {
               {{ getDataValue(item, col) }}
             </td>
 
-            <td
-              class="px-3 py-2 border-b hover:cursor-pointer hover:bg-blue-100 transition-colors duration-200"
-              @click="
-                openPOModal(
-                  item,
-                  props.selectedDate || new Date().toISOString().split('T')[0]
-                )
-              "
-            >
-              {{ item.po || "-" }}
-            </td>
-
             <td class="px-3 py-2 border-b font-bold text-right">{{ getTotal(item) }}</td>
           </tr>
         </tbody>
@@ -321,85 +244,12 @@ const updatePO = async () => {
                 }}
               </span>
             </td>
-            <td class="px-3 py-2 border-b font-bold">-</td>
             <td class="px-3 py-2 border-b font-bold text-right">
               {{ filteredAndSortedItems.reduce((sum, item) => sum + getTotal(item), 0) }}
             </td>
           </tr>
         </tfoot>
       </table>
-    </div>
-
-    <!-- PO Edit Modal -->
-    <div
-      v-if="showPOModal"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    >
-      <div class="bg-white rounded-lg p-6 w-96 max-w-md">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">Edit Purchase Order</h3>
-          <button class="text-gray-400 hover:text-gray-600" @click="closePOModal">
-            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Item</label>
-            <p class="text-sm text-gray-900 bg-gray-50 p-2 rounded">
-              {{ selectedItem?.name }} ({{ selectedItem?.code }})
-            </p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-            <p class="text-sm text-gray-900 bg-gray-50 p-2 rounded">
-              {{ modalDate }}
-            </p>
-          </div>
-
-          <div>
-            <label for="po-input" class="block text-sm font-medium text-gray-700 mb-1">
-              Purchase Order
-            </label>
-            <input
-              id="po-input"
-              v-model="poValue"
-              type="text"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter PO number..."
-              @keyup.enter="updatePO"
-            />
-          </div>
-        </div>
-
-        <div class="flex justify-end space-x-3 mt-6">
-          <button
-            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200"
-            @click="closePOModal"
-          >
-            Cancel
-          </button>
-          <button
-            :disabled="isUpdatingPO"
-            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-md transition-colors duration-200 flex items-center"
-            @click="updatePO"
-          >
-            <div
-              v-if="isUpdatingPO"
-              class="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent mr-2"
-            ></div>
-            {{ isUpdatingPO ? "Updating..." : "Update PO" }}
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 </template>

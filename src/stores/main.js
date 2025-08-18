@@ -48,6 +48,7 @@ export const useMainStore = defineStore("main", () => {
     available_dates: { data: [], isLoading: false },
     latest_date: { data: [], isLoading: false },
     stock_minimum: { data: [], isLoading: false },
+    purchase_orders: { data: [], isLoading: false },
   });
 
   function setUser() {
@@ -97,8 +98,35 @@ export const useMainStore = defineStore("main", () => {
     date_end.value = date2;
   }
 
-  function fetchStockMovement(date) {
-    axiosRequest(`warehouse/stock-movement/${date}`, "stock_movement");
+  function fetchStockMovement(date, refresh = false) {
+    const url = refresh
+      ? `warehouse/stock-movement/${date}?refresh=true`
+      : `warehouse/stock-movement/${date}`;
+    axiosRequest(url, "stock_movement");
+  }
+
+  function fetchPurchaseOrders() {
+    axiosRequest("warehouse/purchase-orders", "purchase_orders");
+  }
+
+  function updatePurchaseOrders(date, poIds) {
+    return new Promise((resolve, reject) => {
+      axios({
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        url: `${import.meta.env.VITE_API_URL}/warehouse/po`,
+        data: {
+          date: date,
+          po_ids: poIds.map((po) => po.po_id),
+        },
+      })
+        .then((result) => {
+          resolve(result.data);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
   }
 
   function fetchAvailableDates(warehouseId = null) {
@@ -165,10 +193,9 @@ export const useMainStore = defineStore("main", () => {
   }
 
   function syncStockLevels(warehouseId) {
-    const url = warehouseId === 'all' 
-      ? 'stock-level/sync/all'
-      : `stock-level/sync/${warehouseId}`;
-      
+    const url =
+      warehouseId === "all" ? "stock-level/sync/all" : `stock-level/sync/${warehouseId}`;
+
     return new Promise((resolve, reject) => {
       axios({
         method: "GET",
@@ -285,6 +312,7 @@ export const useMainStore = defineStore("main", () => {
       available_dates: { data: [], isLoading: false },
       latest_date: { data: [], isLoading: false },
       stock_minimum: { data: [], isLoading: false },
+      purchase_orders: { data: [], isLoading: false },
     };
   }
   function axiosRequest(url, state) {
@@ -334,6 +362,8 @@ export const useMainStore = defineStore("main", () => {
     clearApiData,
     fetchDailyTransaction,
     fetchStockMovement,
+    fetchPurchaseOrders,
+    updatePurchaseOrders,
     fetchAvailableDates,
     fetchLatestDate,
     fetchStockLevels,

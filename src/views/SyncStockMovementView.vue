@@ -12,6 +12,7 @@ import axios from "axios";
 
 const mainStore = useMainStore();
 const isLoading = ref(false);
+const refreshFromCloud = ref(false);
 
 const showSyncModal = ref(false);
 const currentProgress = ref(0);
@@ -156,12 +157,16 @@ const startSync = async () => {
       addSyncLog(`Syncing ${dateStr}...`, "info");
 
       // Call the sync API for this specific date
-      await axios.get(
-        `${import.meta.env.VITE_API_URL}/stock-level/sync-movement-date/${dateStr}`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
+      let apiUrl = `${
+        import.meta.env.VITE_API_URL
+      }/stock-level/sync-movement-date/${dateStr}`;
+      if (refreshFromCloud.value) {
+        apiUrl += `?refresh=true`;
+      }
+
+      await axios.get(apiUrl, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
 
       addSyncLog(`Successfully synced ${dateStr}`, "success");
 
@@ -242,6 +247,20 @@ const getEmptyDaysBeforeMonth = (year, month) => {
               :max="today"
             />
           </div>
+
+          <!-- Refresh from Quinos Cloud checkbox -->
+          <div class="flex items-center gap-2">
+            <input
+              id="refresh-cloud-sync"
+              v-model="refreshFromCloud"
+              type="checkbox"
+              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label for="refresh-cloud-sync" class="text-sm text-gray-700">
+              Re-sync from Quinos Cloud
+            </label>
+          </div>
+
           <BaseButton
             :icon="mdiSync"
             label="Sync Selected Range"

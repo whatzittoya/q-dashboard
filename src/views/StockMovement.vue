@@ -5,7 +5,7 @@ import SectionTitleLineWithButton from "@/components/SectionTitleLineWithButton.
 import CardBox from "@/components/CardBox.vue";
 import { mdiPackageVariant } from "@mdi/js";
 import SearchBoxWarehouse from "@/components/quinos/form/SearchBoxWarehouse.vue";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useMainStore } from "@/stores/main";
 import StockTable from "@/components/quinos/stockmovement/StockTable.vue";
 
@@ -15,16 +15,60 @@ import { autoTable } from "jspdf-autotable";
 
 const mainStore = useMainStore();
 const selectedDate = ref("");
+const poRegistered = ref([]);
+const showPODropdown = ref(false);
+const poSearchTerm = ref("");
 
 const isLoading = computed(() => {
   return mainStore.apiData.stock_movement.isLoading;
 });
 
-const getReport = async (date) => {
+const purchaseOrders = computed(() => {
+  return mainStore.apiData.purchase_orders.data?.data || [];
+});
+
+const filteredPOs = computed(() => {
+  if (!poSearchTerm.value) return purchaseOrders.value;
+  return purchaseOrders.value.filter(
+    (po) =>
+      po.po_id.toLowerCase().includes(poSearchTerm.value.toLowerCase()) ||
+      po.supplier_name.toLowerCase().includes(poSearchTerm.value.toLowerCase()) ||
+      po.date.includes(poSearchTerm.value)
+  );
+});
+
+const addPO = (po) => {
+  if (!poRegistered.value.find((p) => p.po_id === po.po_id)) {
+    poRegistered.value.push(po);
+  }
+  poSearchTerm.value = "";
+  showPODropdown.value = false;
+};
+
+const removePO = (poId) => {
+  const index = poRegistered.value.findIndex((p) => p.po_id === poId);
+  if (index !== -1) {
+    poRegistered.value.splice(index, 1);
+  }
+};
+
+const getReport = async (date, refresh = false) => {
   selectedDate.value = date;
   // Loading state is now managed by the store
-  mainStore.fetchStockMovement(date);
+  mainStore.fetchStockMovement(date, refresh);
 };
+
+// Watch for stock movement data changes and add POs to selected state
+watch(() => mainStore.apiData.stock_movement.data, (newData) => {
+  if (newData && newData.po_ids && newData.po_ids.length > 0) {
+    // Add fetched POs to selected state if they don't already exist
+    newData.po_ids.forEach(poId => {
+      if (!poRegistered.value.some(po => po.po_id === poId)) {
+        poRegistered.value.push({ po_id: poId });
+      }
+    });
+  }
+}, { deep: true });
 
 const arrayWarehouse = computed(() => {
   // Extract warehouse names from the first item's properties
@@ -33,7 +77,8 @@ const arrayWarehouse = computed(() => {
     const warehouseNames = Object.keys(firstItem).filter(
       (key) =>
         // Filter out non-warehouse properties
-        !["code", "name", "category", "item_id", "po"].includes(key) && !key.includes("-requested")
+        !["code", "name", "category", "item_id"].includes(key) &&
+        !key.includes("-requested")
     );
 
     // Create columns for both stock and requested for each warehouse
@@ -113,17 +158,18 @@ async function exportPDF() {
   doc.save(`stock-movement-${selectedDate.value}.pdf`);
 }
 
-const handlePOUpdated = (updatedItem) => {
-  // Update the local data without refetching
-  const index = formatedStock.value.findIndex(item => item.code === updatedItem.code);
-  if (index !== -1) {
-    formatedStock.value[index].po = updatedItem.po;
+const updatePO = () => {
+  if (selectedDate.value && poRegistered.value.length > 0) {
+    mainStore.updatePurchaseOrders(selectedDate.value, poRegistered.value);
   }
 };
 
 onMounted(() => {
   if (mainStore.apiData.warehouse.data.length == 0) {
     mainStore.fetchWarehouse();
+  }
+  if (mainStore.apiData.purchase_orders.data.length == 0) {
+    mainStore.fetchPurchaseOrders();
   }
 });
 </script>
@@ -138,7 +184,98 @@ onMounted(() => {
           has-date
           :loading="isLoading"
           @search-data="getReport"
+          @date-changed="(date) => (selectedDate = date)"
         ></SearchBoxWarehouse>
+
+        <!-- PO Selection Section -->
+        <div class="mb-6 p-4 bg-gray-50 rounded-lg">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-4">
+              <h3 class="text-lg font-semibold text-gray-700">Purchase Orders</h3>
+              <!-- Selected PO Tags -->
+              <div v-if="poRegistered.length > 0" class="flex flex-wrap gap-2">
+                <div
+                  v-for="po in poRegistered"
+                  :key="po.po_id"
+                  class="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-800 rounded-full text-sm font-medium"
+                >
+                  <span>{{ po.po_id }}</span>
+                  <button
+                    class="ml-1 text-gray-600 hover:text-gray-800"
+                    @click="removePO(po.po_id)"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      ></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <!-- Plus Icon to Add PO -->
+              <button
+                :disabled="!selectedDate"
+                class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                @click="showPODropdown = !showPODropdown"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 4v16m8-8H4"
+                  ></path>
+                </svg>
+              </button>
+            </div>
+            <!-- Update PO Button -->
+            <button
+              v-if="poRegistered.length > 0"
+              :disabled="!selectedDate"
+              class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+              @click="updatePO"
+            >
+              Update PO
+            </button>
+          </div>
+
+          <!-- PO Search Dropdown -->
+          <div v-if="showPODropdown" class="relative mb-4">
+            <input
+              v-model="poSearchTerm"
+              type="text"
+              placeholder="Search PO by ID, supplier, or date..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            <!-- Dropdown Results -->
+            <div
+              v-if="filteredPOs.length > 0 && poSearchTerm"
+              class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+            >
+              <div
+                v-for="po in filteredPOs"
+                :key="po.po_id"
+                class="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+                @click="addPO(po)"
+              >
+                <div class="font-medium text-gray-900">{{ po.po_id }}</div>
+                <div class="text-sm text-gray-600">
+                  {{ po.supplier_name }} • {{ po.date }}
+                </div>
+                <div class="text-sm text-gray-500">Total: {{ po.total }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div class="relative">
           <!-- Loading Overlay -->
@@ -208,7 +345,6 @@ onMounted(() => {
             :items="formatedStock"
             :other-columns="arrayWarehouse"
             :selected-date="selectedDate"
-            @po-updated="handlePOUpdated"
           ></StockTable>
         </div>
       </CardBox>
