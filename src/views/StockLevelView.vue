@@ -3,6 +3,7 @@ import LayoutAuthenticated from "@/layouts/LayoutAuthenticated.vue";
 import SectionMain from "@/components/SectionMain.vue";
 import SectionTitleLineWithButton from "@/components/SectionTitleLineWithButton.vue";
 import CardBox from "@/components/CardBox.vue";
+import StockLevelEditModal from "@/components/StockLevelEditModal.vue";
 import { mdiNumeric0Box, mdiSync } from "@mdi/js";
 import { computed, onMounted, ref } from "vue";
 import { useMainStore } from "@/stores/main";
@@ -10,6 +11,12 @@ import BaseIcon from "@/components/BaseIcon.vue";
 
 const mainStore = useMainStore();
 const isSyncing = ref(false);
+
+// Modal state
+const showEditModal = ref(false);
+const selectedItem = ref({});
+const selectedWarehouse = ref("");
+const isUpdating = ref(false);
 
 const warehouses = computed(() => {
   return mainStore.apiData.warehouse.data || [];
@@ -27,8 +34,10 @@ const isLoading = computed(() => {
 const arrayWarehouse = computed(() => {
   if (stockLevelData.value.length > 0) {
     const firstItem = stockLevelData.value[0];
+    console.log(stockLevelData.value);
     return Object.keys(firstItem).filter((key) => !["name", "item_id"].includes(key));
   }
+
   return [];
 });
 
@@ -45,6 +54,60 @@ const syncStockLevels = async () => {
 
 const fetchStockLevels = async () => {
   await mainStore.fetchStockLevels();
+};
+
+// Handle cell click to open edit modal
+const handleCellClick = (item, warehouse) => {
+  selectedItem.value = item;
+  selectedWarehouse.value = warehouse;
+  showEditModal.value = true;
+};
+
+// Handle save from modal
+const handleSaveStockLevel = async (data) => {
+  isUpdating.value = true;
+  try {
+    const { item, warehouse, minimum, maximum } = data;
+
+    // Check if this item already has stock data for this warehouse
+    const existingStockData = item[warehouse];
+
+    if (existingStockData && existingStockData.id) {
+      // Update existing record
+      await mainStore.updateStockMinimum(existingStockData.id, {
+        minimum: minimum,
+        maximum: maximum,
+        warehouse_name: warehouse,
+      });
+    } else {
+      // Create new record
+      await mainStore.createStockMinimum({
+        item_id: item.item_id,
+        name: item.name,
+        minimum: minimum,
+        maximum: maximum,
+        warehouse_name: warehouse,
+      });
+    }
+
+    // Refresh the stock levels data
+    await fetchStockLevels();
+
+    // Close modal
+    showEditModal.value = false;
+  } catch (error) {
+    console.error("Error updating stock level:", error);
+    // You could add a toast notification here
+  } finally {
+    isUpdating.value = false;
+  }
+};
+
+// Handle modal cancel
+const handleCancelEdit = () => {
+  showEditModal.value = false;
+  selectedItem.value = {};
+  selectedWarehouse.value = "";
 };
 
 onMounted(() => {
@@ -135,7 +198,9 @@ onMounted(() => {
                   <td
                     v-for="warehouse in arrayWarehouse"
                     :key="warehouse"
-                    class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b"
+                    title="Click to edit stock levels"
+                    class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b cursor-pointer hover:bg-blue-50 transition-colors duration-200"
+                    @click="handleCellClick(item, warehouse)"
                   >
                     <div class="flex flex-col space-y-1">
                       <div class="flex items-center space-x-2">
@@ -208,6 +273,15 @@ onMounted(() => {
           </div>
         </div>
       </CardBox>
+
+      <!-- Stock Level Edit Modal -->
+      <StockLevelEditModal
+        v-model="showEditModal"
+        :item="selectedItem"
+        :warehouse="selectedWarehouse"
+        @save="handleSaveStockLevel"
+        @cancel="handleCancelEdit"
+      />
     </SectionMain>
   </LayoutAuthenticated>
 </template>

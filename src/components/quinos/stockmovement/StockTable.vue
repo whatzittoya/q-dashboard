@@ -9,11 +9,15 @@ const props = defineProps({
   selectedDate: { type: String, default: "" },
 });
 
+const emit = defineEmits(["update-need-to-order"]);
+
 const sortKey = ref("name");
 const sortOrders = ref({
   name: 1,
   code: 1,
   category: 1,
+  po: 1,
+  need_to_order: 1,
   total: 1,
 });
 
@@ -26,8 +30,45 @@ const columnFilters = ref({
 
 const activeFilter = ref(""); // Track which filter is currently active
 
+// Modal refs for need to order editing
+const showNeedToOrderModal = ref(false);
+const selectedItem = ref(null);
+const needToOrderValue = ref(0);
+const isUpdating = ref(false);
+
 const toggleFilter = (key) => {
   activeFilter.value = activeFilter.value === key ? "" : key;
+};
+
+// Need to order modal functions
+const openNeedToOrderModal = (item) => {
+  selectedItem.value = item;
+  needToOrderValue.value = item.need_to_order || 0;
+  showNeedToOrderModal.value = true;
+};
+
+const closeNeedToOrderModal = () => {
+  showNeedToOrderModal.value = false;
+  selectedItem.value = null;
+  needToOrderValue.value = 0;
+};
+
+const updateNeedToOrder = async () => {
+  if (!selectedItem.value) return;
+
+  isUpdating.value = true;
+  try {
+    // Emit event to parent to update the item
+    emit("update-need-to-order", {
+      itemCode: selectedItem.value.code,
+      needToOrderValue: needToOrderValue.value,
+    });
+    closeNeedToOrderModal();
+  } catch (error) {
+    console.error("Error updating need to order:", error);
+  } finally {
+    isUpdating.value = false;
+  }
 };
 
 const sortBy = (key) => {
@@ -54,6 +95,28 @@ const filteredAndSortedItems = computed(() => {
     let order = sortOrders.value[sortKey.value];
     if (sortKey.value === "total") {
       return order * (a.total - b.total);
+    }
+    if (sortKey.value === "po") {
+      const aValue =
+        a[sortKey.value] !== undefined && a[sortKey.value] !== null
+          ? a[sortKey.value]
+          : -1;
+      const bValue =
+        b[sortKey.value] !== undefined && b[sortKey.value] !== null
+          ? b[sortKey.value]
+          : -1;
+      return order * (aValue - bValue);
+    }
+    if (sortKey.value === "need_to_order") {
+      const aValue =
+        a[sortKey.value] !== undefined && a[sortKey.value] !== null
+          ? a[sortKey.value]
+          : -1;
+      const bValue =
+        b[sortKey.value] !== undefined && b[sortKey.value] !== null
+          ? b[sortKey.value]
+          : -1;
+      return order * (aValue - bValue);
     }
     if (a[sortKey.value] === "-" || b[sortKey.value] === "-") return 0;
     return a[sortKey.value] === b[sortKey.value]
@@ -185,6 +248,32 @@ const getDataValue = (item, col) => {
               </div>
             </th>
 
+            <!-- PO column -->
+            <th class="px-3 py-2 border-b w-24">
+              <div
+                class="flex items-center justify-between cursor-pointer"
+                @click="sortBy('po')"
+              >
+                <span>PO</span>
+                <span v-if="sortKey === 'po'">
+                  {{ sortOrders.po > 0 ? "↑" : "↓" }}
+                </span>
+              </div>
+            </th>
+
+            <!-- Need to Order column -->
+            <th class="px-3 py-2 border-b w-24">
+              <div
+                class="flex items-center justify-between cursor-pointer"
+                @click="sortBy('need_to_order')"
+              >
+                <span>Need to Order</span>
+                <span v-if="sortKey === 'need_to_order'">
+                  {{ sortOrders.need_to_order > 0 ? "↑" : "↓" }}
+                </span>
+              </div>
+            </th>
+
             <!-- Total column -->
             <th class="px-3 py-2 border-b w-24">
               <div
@@ -220,6 +309,22 @@ const getDataValue = (item, col) => {
               {{ getDataValue(item, col) }}
             </td>
 
+            <td class="px-3 py-2 border-b">
+              {{ item.po !== undefined && item.po !== null ? item.po : "-" }}
+            </td>
+
+            <td
+              class="px-3 py-2 border-b cursor-pointer hover:bg-blue-50 hover:text-blue-600 transition-colors"
+              :title="'Click to edit need to order for ' + item.name"
+              @click="openNeedToOrderModal(item)"
+            >
+              {{
+                item.need_to_order !== undefined && item.need_to_order !== null
+                  ? item.need_to_order
+                  : "-"
+              }}
+            </td>
+
             <td class="px-3 py-2 border-b font-bold text-right">{{ getTotal(item) }}</td>
           </tr>
         </tbody>
@@ -244,12 +349,81 @@ const getDataValue = (item, col) => {
                 }}
               </span>
             </td>
+            <td class="px-3 py-2 border-b font-bold">-</td>
+            <td class="px-3 py-2 border-b font-bold">-</td>
             <td class="px-3 py-2 border-b font-bold text-right">
               {{ filteredAndSortedItems.reduce((sum, item) => sum + getTotal(item), 0) }}
             </td>
           </tr>
         </tfoot>
       </table>
+    </div>
+
+    <!-- Need to Order Modal -->
+    <div
+      v-if="showNeedToOrderModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      @click.self="closeNeedToOrderModal"
+    >
+      <div class="bg-white rounded-lg p-6 w-96 max-w-md mx-4">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">Edit Need to Order</h3>
+          <button
+            class="text-gray-400 hover:text-gray-600 transition-colors"
+            @click="closeNeedToOrderModal"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
+          </button>
+        </div>
+
+        <div class="mb-4">
+          <p class="text-sm text-gray-600 mb-2">
+            <strong>Item:</strong> {{ selectedItem?.name }}
+          </p>
+          <p class="text-sm text-gray-600 mb-4">
+            <strong>Code:</strong> {{ selectedItem?.code }}
+          </p>
+        </div>
+
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Need to Order Quantity
+          </label>
+          <input
+            v-model.number="needToOrderValue"
+            type="number"
+            min="0"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Enter quantity"
+            @keyup.enter="updateNeedToOrder"
+          />
+        </div>
+
+        <div class="flex justify-end space-x-3">
+          <button
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+            :disabled="isUpdating"
+            @click="closeNeedToOrderModal"
+          >
+            Cancel
+          </button>
+          <button
+            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="isUpdating"
+            @click="updateNeedToOrder"
+          >
+            <span v-if="isUpdating">Updating...</span>
+            <span v-else>Update</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>

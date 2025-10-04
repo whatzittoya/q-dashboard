@@ -18,6 +18,9 @@ const selectedDate = ref("");
 const poRegistered = ref([]);
 const showPODropdown = ref(false);
 const poSearchTerm = ref("");
+const showInfoBox = ref(false);
+const infoMessage = ref("");
+const infoType = ref("info");
 
 const isLoading = computed(() => {
   return mainStore.apiData.stock_movement.isLoading;
@@ -59,16 +62,20 @@ const getReport = async (date, refresh = false) => {
 };
 
 // Watch for stock movement data changes and add POs to selected state
-watch(() => mainStore.apiData.stock_movement.data, (newData) => {
-  if (newData && newData.po_ids && newData.po_ids.length > 0) {
-    // Add fetched POs to selected state if they don't already exist
-    newData.po_ids.forEach(poId => {
-      if (!poRegistered.value.some(po => po.po_id === poId)) {
-        poRegistered.value.push({ po_id: poId });
-      }
-    });
-  }
-}, { deep: true });
+watch(
+  () => mainStore.apiData.stock_movement.data,
+  (newData) => {
+    if (newData && newData.po_ids && newData.po_ids.length > 0) {
+      // Add fetched POs to selected state if they don't already exist
+      newData.po_ids.forEach((poId) => {
+        if (!poRegistered.value.some((po) => po.po_id === poId)) {
+          poRegistered.value.push({ po_id: poId });
+        }
+      });
+    }
+  },
+  { deep: true }
+);
 
 const arrayWarehouse = computed(() => {
   // Extract warehouse names from the first item's properties
@@ -77,7 +84,7 @@ const arrayWarehouse = computed(() => {
     const warehouseNames = Object.keys(firstItem).filter(
       (key) =>
         // Filter out non-warehouse properties
-        !["code", "name", "category", "item_id"].includes(key) &&
+        !["code", "name", "category", "item_id", "po", "need_to_order"].includes(key) &&
         !key.includes("-requested")
     );
 
@@ -87,7 +94,6 @@ const arrayWarehouse = computed(() => {
       columns.push(warehouse); // Stock column
       columns.push(`${warehouse} (req)`); // Requested column with custom format
     });
-
     return columns;
   }
   return [];
@@ -164,6 +170,44 @@ const updatePO = () => {
   }
 };
 
+const handleUpdateNeedToOrder = async (data) => {
+  const { itemCode, needToOrderValue } = data;
+  
+  try {
+    // Call API to update need to order in database
+    await mainStore.updateNeedToOrder(selectedDate.value, itemCode, needToOrderValue);
+    
+    // Update local state only after successful API call
+    const itemIndex = formatedStock.value.findIndex(item => item.code === itemCode);
+    if (itemIndex !== -1) {
+      formatedStock.value[itemIndex].need_to_order = needToOrderValue;
+    }
+    
+    // Show success message
+    showInfoBox.value = true;
+    infoMessage.value = `Successfully updated need to order for ${itemCode}`;
+    infoType.value = "success";
+    
+    // Hide info box after 3 seconds
+    setTimeout(() => {
+      showInfoBox.value = false;
+    }, 3000);
+    
+  } catch (error) {
+    console.error('Error updating need to order:', error);
+    
+    // Show error message
+    showInfoBox.value = true;
+    infoMessage.value = `Failed to update need to order for ${itemCode}`;
+    infoType.value = "error";
+    
+    // Hide info box after 5 seconds
+    setTimeout(() => {
+      showInfoBox.value = false;
+    }, 5000);
+  }
+};
+
 onMounted(() => {
   if (mainStore.apiData.warehouse.data.length == 0) {
     mainStore.fetchWarehouse();
@@ -226,7 +270,12 @@ onMounted(() => {
                 class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                 @click="showPODropdown = !showPODropdown"
               >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -345,6 +394,7 @@ onMounted(() => {
             :items="formatedStock"
             :other-columns="arrayWarehouse"
             :selected-date="selectedDate"
+            @update-need-to-order="handleUpdateNeedToOrder"
           ></StockTable>
         </div>
       </CardBox>

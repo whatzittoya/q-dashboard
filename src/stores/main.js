@@ -64,7 +64,7 @@ export const useMainStore = defineStore("main", () => {
         user.value.email = data.email;
         user.value.role = data.role;
       })
-      .catch((error) => {
+      .catch(() => {
         localStorage.removeItem("token");
         localStorage.removeItem("email");
       });
@@ -76,7 +76,7 @@ export const useMainStore = defineStore("main", () => {
       .then((result) => {
         clients.value = result?.data?.data;
       })
-      .catch((error) => {
+      .catch(() => {
         // alert(error.message)
       });
   }
@@ -87,7 +87,7 @@ export const useMainStore = defineStore("main", () => {
       .then((result) => {
         history.value = result?.data;
       })
-      .catch((error) => {
+      .catch(() => {
         // alert(error.message)
       });
   }
@@ -116,8 +116,29 @@ export const useMainStore = defineStore("main", () => {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         url: `${import.meta.env.VITE_API_URL}/warehouse/po`,
         data: {
-          date: date,
+          stock_date: date,
           po_ids: poIds.map((po) => po.po_id),
+        },
+      })
+        .then((result) => {
+          resolve(result.data);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  }
+
+  function updateNeedToOrder(date, itemId, needToOrderValue) {
+    return new Promise((resolve, reject) => {
+      axios({
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        url: `${import.meta.env.VITE_API_URL}/warehouse/need-to-order`,
+        data: {
+          date: date,
+          item_code: itemId,
+          need_to_order: needToOrderValue,
         },
       })
         .then((result) => {
@@ -178,6 +199,74 @@ export const useMainStore = defineStore("main", () => {
         method: "GET",
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         url: `${import.meta.env.VITE_API_URL}/stock-level/sync-warehouses`,
+      })
+        .then((result) => {
+          resolve(result.data);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  }
+
+  // Stock Minimum API functions
+  function createStockMinimum(data) {
+    return new Promise((resolve, reject) => {
+      axios({
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        url: `${import.meta.env.VITE_API_URL}/stock-minimum/`,
+        data: data,
+      })
+        .then((result) => {
+          resolve(result.data);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  }
+
+  function updateStockMinimum(id, data) {
+    return new Promise((resolve, reject) => {
+      axios({
+        method: "PUT",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        url: `${import.meta.env.VITE_API_URL}/stock-minimum/${id}`,
+        data: data,
+      })
+        .then((result) => {
+          resolve(result.data);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  }
+
+  function deleteStockMinimum(id) {
+    return new Promise((resolve, reject) => {
+      axios({
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        url: `${import.meta.env.VITE_API_URL}/stock-minimum/${id}`,
+      })
+        .then((result) => {
+          resolve(result.data);
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  }
+
+  function bulkUpsertStockMinimum(data) {
+    return new Promise((resolve, reject) => {
+      axios({
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        url: `${import.meta.env.VITE_API_URL}/stock-minimum/bulk-upsert`,
+        data: { data: data },
       })
         .then((result) => {
           resolve(result.data);
@@ -328,7 +417,7 @@ export const useMainStore = defineStore("main", () => {
         apiData.value[state].data = result?.data;
         apiData.value[state].isLoading = false;
       })
-      .catch((error) => {
+      .catch(() => {
         // alert(error.message)
       });
   }
@@ -369,6 +458,11 @@ export const useMainStore = defineStore("main", () => {
     fetchStockLevels,
     syncStockLevels,
     syncStockMovement,
+    updateNeedToOrder,
+    createStockMinimum,
+    updateStockMinimum,
+    deleteStockMinimum,
+    bulkUpsertStockMinimum,
     date_start,
     date_end,
     date_month,
