@@ -136,7 +136,10 @@ watch(
 
         <!-- Stock Level Inputs -->
         <div class="space-y-4">
-          <FormField label="Minimum Stock Level" help="Set the minimum stock level for this item">
+          <FormField
+            label="Minimum Stock Level"
+            help="Set the minimum stock level for this item"
+          >
             <FormControl
               v-model="minimum"
               type="number"
@@ -147,7 +150,10 @@ watch(
             />
           </FormField>
 
-          <FormField label="Maximum Stock Level" help="Set the maximum stock level for this item">
+          <FormField
+            label="Maximum Stock Level"
+            help="Set the maximum stock level for this item"
+          >
             <FormControl
               v-model="maximum"
               type="number"
@@ -165,13 +171,17 @@ watch(
           <div class="flex space-x-4">
             <div class="flex items-center space-x-2">
               <span class="text-xs text-blue-600">Min:</span>
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+              <span
+                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800"
+              >
                 {{ currentStockData.minimum || 0 }}
               </span>
             </div>
             <div class="flex items-center space-x-2">
               <span class="text-xs text-blue-600">Max:</span>
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+              <span
+                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"
+              >
                 {{ currentStockData.maximum || 0 }}
               </span>
             </div>
@@ -188,12 +198,7 @@ watch(
             :loading="isLoading"
             @click="handleSave"
           />
-          <BaseButton
-            label="Cancel"
-            color="info"
-            outline
-            @click="handleCancel"
-          />
+          <BaseButton label="Cancel" color="info" outline @click="handleCancel" />
         </BaseButtons>
       </template>
     </CardBox>

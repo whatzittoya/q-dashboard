@@ -4,7 +4,9 @@ import SectionMain from "@/components/SectionMain.vue";
 import SectionTitleLineWithButton from "@/components/SectionTitleLineWithButton.vue";
 import CardBox from "@/components/CardBox.vue";
 import StockLevelEditModal from "@/components/StockLevelEditModal.vue";
-import { mdiNumeric0Box, mdiSync } from "@mdi/js";
+import StockLevelBulkInsertModal from "@/components/StockLevelBulkInsertModal.vue";
+import StockLevelCSVImportModal from "@/components/StockLevelCSVImportModal.vue";
+import { mdiNumeric0Box, mdiSync, mdiPlus, mdiUpload } from "@mdi/js";
 import { computed, onMounted, ref } from "vue";
 import { useMainStore } from "@/stores/main";
 import BaseIcon from "@/components/BaseIcon.vue";
@@ -17,6 +19,14 @@ const showEditModal = ref(false);
 const selectedItem = ref({});
 const selectedWarehouse = ref("");
 const isUpdating = ref(false);
+
+// Bulk insert modal state
+const showBulkInsertModal = ref(false);
+const isBulkInserting = ref(false);
+
+// CSV import modal state
+const showCSVImportModal = ref(false);
+const isCSVImporting = ref(false);
 
 const warehouses = computed(() => {
   return mainStore.apiData.warehouse.data || [];
@@ -69,26 +79,14 @@ const handleSaveStockLevel = async (data) => {
   try {
     const { item, warehouse, minimum, maximum } = data;
 
-    // Check if this item already has stock data for this warehouse
-    const existingStockData = item[warehouse];
-
-    if (existingStockData && existingStockData.id) {
-      // Update existing record
-      await mainStore.updateStockMinimum(existingStockData.id, {
-        minimum: minimum,
-        maximum: maximum,
-        warehouse_name: warehouse,
-      });
-    } else {
-      // Create new record
-      await mainStore.createStockMinimum({
-        item_id: item.item_id,
-        name: item.name,
-        minimum: minimum,
-        maximum: maximum,
-        warehouse_name: warehouse,
-      });
-    }
+    // Create new record
+    await mainStore.createStockMinimum({
+      item_id: item.item_id,
+      name: item.name,
+      minimum: minimum,
+      maximum: maximum,
+      warehouse_name: warehouse,
+    });
 
     // Refresh the stock levels data
     await fetchStockLevels();
@@ -110,6 +108,68 @@ const handleCancelEdit = () => {
   selectedWarehouse.value = "";
 };
 
+// Handle bulk insert button click
+const handleBulkInsertClick = () => {
+  showBulkInsertModal.value = true;
+};
+
+// Handle bulk insert save
+const handleBulkInsertSave = async (bulkData) => {
+  isBulkInserting.value = true;
+  try {
+    await mainStore.bulkUpsertStockMinimum(bulkData);
+
+    // Refresh the stock levels data
+    await fetchStockLevels();
+
+    // Close modal
+    showBulkInsertModal.value = false;
+
+    console.log("Bulk insert successful:", bulkData);
+  } catch (error) {
+    console.error("Error bulk inserting stock levels:", error);
+    // You could add a toast notification here
+  } finally {
+    isBulkInserting.value = false;
+  }
+};
+
+// Handle bulk insert cancel
+const handleBulkInsertCancel = () => {
+  showBulkInsertModal.value = false;
+};
+
+// Handle CSV import button click
+const handleCSVImportClick = () => {
+  showCSVImportModal.value = true;
+};
+
+// Handle CSV import
+const handleCSVImport = async (csvData) => {
+  isCSVImporting.value = true;
+  try {
+    await mainStore.bulkUpsertStockMinimum(csvData);
+
+    // Refresh the stock levels data
+    await fetchStockLevels();
+
+    // Close modal
+    showCSVImportModal.value = false;
+
+    console.log("CSV import successful:", csvData);
+  } catch (error) {
+    console.error("Error importing CSV data:", error);
+    // You could add a toast notification here
+  } finally {
+    isCSVImporting.value = false;
+  }
+};
+
+// Handle CSV import cancel
+const handleCSVImportCancel = () => {
+  showCSVImportModal.value = false;
+};
+
 onMounted(() => {
   if (warehouses.value.length === 0) {
     mainStore.fetchWarehouse();
@@ -123,19 +183,37 @@ onMounted(() => {
   <LayoutAuthenticated>
     <SectionMain>
       <SectionTitleLineWithButton :icon="mdiNumeric0Box" title="Stock Level" main>
-        <button
-          :disabled="isSyncing"
-          class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-md shadow-sm transition-colors duration-200"
-          @click="syncStockLevels"
-        >
-          <BaseIcon
-            :path="mdiSync"
-            :class="{ 'animate-spin': isSyncing }"
-            class="mr-2"
-            size="18"
-          />
-          {{ isSyncing ? "Syncing..." : "Sync Stock Levels" }}
-        </button>
+        <div class="flex space-x-2">
+          <button
+            :disabled="isCSVImporting"
+            class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white text-sm font-medium rounded-md shadow-sm transition-colors duration-200"
+            @click="handleCSVImportClick"
+          >
+            <BaseIcon :path="mdiUpload" class="mr-2" size="18" />
+            Import CSV
+          </button>
+          <button
+            :disabled="isBulkInserting"
+            class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded-md shadow-sm transition-colors duration-200"
+            @click="handleBulkInsertClick"
+          >
+            <BaseIcon :path="mdiPlus" class="mr-2" size="18" />
+            Bulk Insert
+          </button>
+          <button
+            :disabled="isSyncing"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white text-sm font-medium rounded-md shadow-sm transition-colors duration-200"
+            @click="syncStockLevels"
+          >
+            <BaseIcon
+              :path="mdiSync"
+              :class="{ 'animate-spin': isSyncing }"
+              class="mr-2"
+              size="18"
+            />
+            {{ isSyncing ? "Syncing..." : "Sync Stock Levels" }}
+          </button>
+        </div>
       </SectionTitleLineWithButton>
 
       <CardBox>
@@ -281,6 +359,22 @@ onMounted(() => {
         :warehouse="selectedWarehouse"
         @save="handleSaveStockLevel"
         @cancel="handleCancelEdit"
+      />
+
+      <!-- Bulk Insert Modal -->
+      <StockLevelBulkInsertModal
+        v-model="showBulkInsertModal"
+        :warehouses="warehouses"
+        @save="handleBulkInsertSave"
+        @cancel="handleBulkInsertCancel"
+      />
+
+      <!-- CSV Import Modal -->
+      <StockLevelCSVImportModal
+        v-model="showCSVImportModal"
+        :warehouses="warehouses"
+        @import="handleCSVImport"
+        @cancel="handleCSVImportCancel"
       />
     </SectionMain>
   </LayoutAuthenticated>

@@ -211,6 +211,7 @@ export const useMainStore = defineStore("main", () => {
 
   // Stock Minimum API functions
   function createStockMinimum(data) {
+    console.log(data);
     return new Promise((resolve, reject) => {
       axios({
         method: "POST",
